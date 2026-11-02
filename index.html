@@ -185,6 +185,7 @@ nav.tabs button.on{color:var(--ink);background:var(--sunk)}
 
 /* sheet */
 .scrim{position:fixed;inset:0;background:rgba(10,14,18,.45);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.back{align-self:flex-start;min-height:44px;padding:8px 12px 8px 0;margin:-6px 0 -10px;border:0;background:none;color:var(--muted);font:inherit;font-weight:600;cursor:pointer}
 .xbtn{position:sticky;top:0;align-self:flex-end;margin-bottom:-46px;width:40px;height:40px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:16px;z-index:1}
 .sheet h2{padding-right:48px}
 .sheet input[type=search]{padding:10px 12px;font-size:16px;width:100%}
@@ -646,7 +647,18 @@ function renderPlan(){const p=paces(S.fiveK);
    <div>${resetArm?`<button class="btn danger" data-act="reset">Tap again to reset the plan</button>`:`<button class="btn" data-act="resetarm">Reset plan</button>`}</div></div>`}
 
 /* ---------- sheet ---------- */
-function renderSheet(){const el=$('#sheet');if(!sheet){el.innerHTML='';return}
+// Phone back button / swipe: keep one extra history entry while off the home screen, and step back one level on popstate.
+let skipPop=false;
+const atRoot=()=>view==='today'&&!sheet;
+function syncHist(){const deep=!!history.state?.mp;
+  if(!atRoot()&&!deep)history.pushState({mp:1},'');
+  else if(atRoot()&&deep){skipPop=true;history.back()}}
+function goBack(){
+  if(sheet){sheet=null;renderSheet();return}
+  if(view==='edit'){if(ED?.dirty&&!confirm('Discard your unsaved changes?')){render();return}edBack();return}
+  if(view!=='today'){view='today';render();window.scrollTo(0,0)}}
+addEventListener('popstate',()=>{if(skipPop){skipPop=false;return}goBack();syncHist()});
+function renderSheet(){const el=$('#sheet');if(!sheet){el.innerHTML='';syncHist();return}
   let h='';
   if(sheet.t==='choose'){const m=sheet.mode;
     if(m==='gym'||m==='home'){const R=routines(m);h=`<h2>Choose a ${m} routine</h2>`+(R.length?R.map(r=>{const last=SESS.find(s=>s.mode===m&&s.rid===r.id),n=routineEx(r,m).length;
@@ -664,7 +676,7 @@ function renderSheet(){const el=$('#sheet');if(!sheet){el.innerHTML='';return}
       (opts.length?`<div class="eyebrow" data-gh="s">Suggested</div>`+opts.map(opt('s')).join(''):'')+`<div class="eyebrow" data-gh="a">All exercises, A–Z</div>`+rest.map(opt('a')).join('')+`<p class="small muted" id="swapnone" hidden>No exercise matches. You can create one in Plan → My exercises.</p>`}
   else if(sheet.t==='switch'){h=`<h2>Switch workout?</h2><p>This drops today's ${esc(S.active.title)} without saving. Nothing in your plan changes.</p>
     <button class="btn danger block" data-act="discard">Drop it and pick again</button>`}
-  el.innerHTML=`<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true"><button class="xbtn" data-act="close" aria-label="Close">✕</button>${h}<button class="btn block" data-act="close">Cancel</button></div></div>`}
+  syncHist();el.innerHTML=`<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true"><button class="xbtn" data-act="close" aria-label="Close">✕</button>${h}<button class="btn block" data-act="close">Cancel</button></div></div>`}
 
 
 /* ===================== PLAN EDITOR ===================== */
@@ -678,7 +690,7 @@ const intOr=(v,d,min=0)=>Math.max(min,Math.round(numOr(v,d)));
 const fld=(label,path,val,ty='n',cls='')=>`<label class="${cls}">${label}<input data-e="${path}" inputmode="${ty==='s'?'text':ty==='t'?'numeric':'decimal'}" value="${esc(val)}" ${ty==='t'?'placeholder="m:ss"':''}></label>`;
 const sel=(label,path,val,opts,cls='')=>`<label class="${cls}">${label}<select data-e="${path}">${opts.map(([v,t])=>`<option value="${esc(v)}" ${String(v)===String(val)?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
 const mvBtns=(path,i,n)=>`<button class="btn sm" data-act="e-mv" data-p="${path}" data-i="${i}" data-d="-1" ${i===0?'disabled':''} aria-label="Move up">↑</button><button class="btn sm" data-act="e-mv" data-p="${path}" data-i="${i}" data-d="1" ${i===n-1?'disabled':''} aria-label="Move down">↓</button><button class="btn sm" data-act="e-rm" data-p="${path}" data-i="${i}" aria-label="Remove">✕</button>`;
-const edHead=(eyebrow,title)=>`<header class="top"><div><div class="eyebrow">${eyebrow}</div><h1>${esc(title)}</h1></div></header>`;
+const edHead=(eyebrow,title)=>`<button class="back" data-act="e-cancel">‹ Back</button><header class="top"><div><div class="eyebrow">${eyebrow}</div><h1>${esc(title)}</h1></div></header>`;
 const edFoot=(resetLabel)=>`<div class="panel"><div class="row"><button class="btn primary" data-act="e-save">Save</button><button class="btn" data-act="e-cancel">Cancel</button></div>${resetLabel?`<button class="link" data-act="e-reset">${resetLabel}</button>`:''}</div>`;
 const exName=(m,id)=>{if(m==='gym')return gx(id)?.n||id;const x=hx(id);return x?x.lv[homeLv(x,id)][0]:id};
 const isCustom=(m,id)=>!!(m==='gym'?P().gymEx:P().homeEx)?.[id];
