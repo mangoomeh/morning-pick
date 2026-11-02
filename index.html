@@ -459,11 +459,12 @@ function warnFor(mode){const p=prevDay();if(!p)return'';
 /* ===================== RENDER ===================== */
 function render(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===(view==='edit'?'plan':view)));
-  const a=$('#app');
+  const a=$('#app'),keep=[...a.querySelectorAll('details[id][open]')].map(d=>d.id);
   if(view==='today')a.innerHTML=S.active?renderActive():renderToday();
   else if(view==='history')a.innerHTML=renderHistory();
   else if(view==='edit'&&ED)a.innerHTML=renderEditor();
   else a.innerHTML=renderPlan();
+  keep.forEach(id=>{const d=document.getElementById(id);if(d)d.open=true});
   renderSheet();renderTimer();
 }
 function syncTag(){return`<span class="sync"><i></i>Saved on this device</span>`}
@@ -598,53 +599,38 @@ function renderHistory(){
 
 /* ---------- plan ---------- */
 let resetArm=false;
-function renderPlan(){const p=paces(S.fiveK);
+function renderPlan(){const p=paces(S.fiveK),R=runPlan(),W=swimPlan();
+  const rl=(m)=>{const L=routines(m);return`<div class="rlist">${L.map((r,i)=>{const ex=routineEx(r,m);return`<details id="pl-${m}-${i}"><summary><b>${esc(r.n)} <span class="small muted">· ${ex.length} exercise${ex.length===1?'':'s'}</span></b></summary><div class="small muted">${ex.map(id=>{if(m==='home')return esc(exName('home',id));const e=gx(id),L=S.lifts[id];return esc(e.n)+(e.k==='t'||e.k==='r'?'':' '+kgTxt(L?L.w:e.start,e.k))}).join(' · ')||'No exercises'}</div></details>`}).join('')||'<p class="muted">No routines yet.</p>'}</div>`};
   return`<header class="top"><div><div class="eyebrow">Goal: get stronger</div><h1>Your plan</h1></div>${syncTag()}</header>
-  <details class="panel" ${SESS.length?'':'open'}><summary><h2>How it works</h2></summary>
-   <p><b>1. Pick a workout.</b> On Today, tap Gym, Home, Run or Swim and choose a session. There's no schedule: train when it suits you. A good week for getting stronger is three strength sessions and one cardio session.</p>
-   <p><b>2. Log as you go.</b> Sets start with last time's numbers. Adjust the weight or reps, then tap ✓. A rest timer starts on its own. Skip anything you don't want to do: only ticked sets are saved. Tap Swap if a machine is taken.</p>
-   <p><b>3. Tap Finish.</b> Nothing is saved or changes in your plan until you do. Switch workout drops the session without saving.</p>
-   <h3>Progress is automatic</h3>
-   <p>Hit the top of the rep range on every set, and next time the app makes it harder:</p>
-   <ul class="small">
-    <li><b>Weights</b> go up by the exercise's step (shown below).</li>
-    <li><b>Assisted machines</b> give you less help. Lower is harder.</li>
-    <li><b>Bodyweight moves</b> level up to a harder variation.</li>
-   </ul>
-   <p>Miss the top of the range, and you keep the same weight or level and aim for one more rep.</p>
-   <h3>Make it yours</h3>
-   <ul class="small">
-    <li><b>Gym and Home routines:</b> there are two presets, Upper body and Lower body. Alternate them so each muscle gets trained about twice a week, or build your own with Manage routines.</li>
-    <li><b>My exercises:</b> add your own gym exercises (barbell, dumbbell, machine, assisted, timed or bodyweight) or home exercises (a ladder of harder variations).</li>
-    <li><b>Runs and swims:</b> pick any session. The app suggests the next one so you work through the cycle. Test sessions measure your progress: a new 5K time updates your treadmill speeds, and each swim cycle makes send-offs 15 s faster.</li>
-   </ul>
-   <p class="small muted">Your data is saved only on this device. Export a backup now and then (see Backup below).</p></details>
-  <div class="panel gym"><h2>Gym routines</h2>
-   <p class="small muted">Tap a routine to see its exercises and current weights.</p>
-   <div class="rlist">${routines().map(r=>{const ex=routineEx(r);return`<details><summary><b>${esc(r.n)} <span class="small muted">· ${ex.length} exercises</span></b></summary><div class="small muted">${ex.map(id=>{const e=gx(id),L=S.lifts[id];return esc(e.n)+(e.k==='t'||e.k==='r'?'':' '+kgTxt(L?L.w:e.start,e.k))}).join(' · ')||'No exercises'}</div></details>`}).join('')||'<p class="muted">No routines yet.</p>'}</div>
-   <p class="small muted">Weight steps: +2.5 kg upper-body barbell, +5 kg lower-body barbell, +2 kg dumbbells, +5 kg most machines. Dumbbell weights are per hand.</p>
-   <div class="row"><button class="btn" data-act="edit" data-v="routines-gym">Manage routines</button><button class="btn" data-act="edit" data-v="exlist">My exercises</button></div></div>
-  <div class="panel home"><h2>Home routines</h2>
-   <div class="rlist">${routines('home').map(r=>{const ex=routineEx(r,'home');return`<details><summary><b>${esc(r.n)} <span class="small muted">· ${ex.length} exercises</span></b></summary><div class="small muted">${ex.map(id=>esc(exName('home',id))).join(' · ')||'No exercises'}</div></details>`}).join('')||'<p class="muted">No routines yet.</p>'}</div>
-   <div class="row"><button class="btn" data-act="edit" data-v="routines-home">Manage routines</button><button class="btn" data-act="edit" data-v="exlist">My exercises</button></div></div>
+  <div class="panel gym"><h2>Gym</h2>${rl('gym')}
+   <div class="row"><button class="btn sm" data-act="edit" data-v="routines-gym">Manage routines</button><button class="btn sm" data-act="edit" data-v="exlist">My exercises</button></div></div>
+  <div class="panel home"><h2>Home</h2>${rl('home')}
+   <div class="row"><button class="btn sm" data-act="edit" data-v="routines-home">Manage routines</button><button class="btn sm" data-act="edit" data-v="exlist">My exercises</button></div></div>
   <div class="panel run"><h2>Running · cycle ${S.runCycle}</h2>
-   <label class="small muted" for="fivek">Current 5K time</label>
-   <div class="row"><input id="fivek" data-f="fiveK" value="${mmss(S.fiveK)}" style="padding:8px;width:100px;font-size:16px" inputmode="numeric"><span class="small muted">Change it and every speed below updates.</span></div>
+   <div class="row"><label class="small muted" for="fivek">5K time</label><input id="fivek" data-f="fiveK" value="${mmss(S.fiveK)}" style="padding:8px;width:90px;font-size:16px" inputmode="numeric"></div>
    <div class="row num small"><span>Easy <b>${f1(p.E)}</b></span><span>Long <b>${f1(p.L)}</b></span><span>Tempo <b>${f1(p.T)}</b></span><span>Interval <b>${f1(p.I)}</b> km/h</span></div>
-   <div class="tw"><table class="t">${runPlan().map((r,i)=>`<tr class="${i===S.q.run?'cur':''}"><td class="num">${i+1}</td><td>${esc(r.n)}${i===S.q.run?'<span class="tag">suggested</span>':''}</td><td class="muted">${r.t}</td></tr>`).join('')}</table></div>
-   <p class="small muted">The Test session is a 5K time trial. Your new time sets the speeds for the next cycle.</p>
-   <div class="row"><button class="btn" data-act="edit" data-v="runlist">Manage runs</button></div></div>
+   <div class="rlist"><details id="pl-runs"><summary><b>${R.length} runs <span class="small muted">· suggested: ${esc(R[S.q.run].n)}</span></b></summary>
+    <div class="tw"><table class="t">${R.map((r,i)=>`<tr class="${i===S.q.run?'cur':''}"><td class="num">${i+1}</td><td>${esc(r.n)}${i===S.q.run?'<span class="tag">suggested</span>':''}</td><td class="muted">${r.t}</td></tr>`).join('')}</table></div></details></div>
+   <div class="row"><button class="btn sm" data-act="edit" data-v="runlist">Manage runs</button></div></div>
   <div class="panel swim"><h2>Swimming · cycle ${S.swimCycle}</h2>
-   <p class="small">“Leave every 3:00” means you push off the wall every 3 minutes. Whatever is left after your 50 m is rest. Each cycle the send-offs get 15 seconds faster.</p>
-   <div class="tw"><table class="t">${swimPlan().map((w,i)=>`<tr class="${i===S.q.swim?'cur':''}"><td class="num">${i+1}</td><td>${esc(w.n)}${i===S.q.swim?'<span class="tag">suggested</span>':''}</td><td class="muted">${w.t}</td><td class="num">${swimDist(w)} m</td></tr>`).join('')}</table></div>
    ${S.swim400?`<p class="small">Last 400 m test: <b class="num">${mmss(S.swim400)}</b></p>`:''}
-   <div class="row"><button class="btn" data-act="edit" data-v="swimlist">Manage swims</button></div></div>
-  <div class="panel"><h2>Backup</h2><p class="small muted">Your data lives only in this browser on this device. Download a backup now and then, and use it to move to a new phone.</p>
-   <p class="small">Last backup: <b>${lsGet('mp_lastExport')?nice(lsGet('mp_lastExport')):'never'}</b> · ${SESS.length} sessions</p>
-   <div class="row"><button class="btn" data-act="export">Export backup</button><label class="btn" for="importFile">Import backup</label>
-   <input id="importFile" type="file" accept="application/json,.json" data-f="import" hidden></div></div>
-  <div class="panel"><h2>Start over</h2><p class="small muted">Clears weights, levels and where you are in the run and swim plans. Your history, routines and other plan edits stay.</p>
-   <div>${resetArm?`<button class="btn danger" data-act="reset">Tap again to reset the plan</button>`:`<button class="btn" data-act="resetarm">Reset plan</button>`}</div></div>`}
+   <div class="rlist"><details id="pl-swims"><summary><b>${W.length} swims <span class="small muted">· suggested: ${esc(W[S.q.swim].n)}</span></b></summary>
+    <div class="tw"><table class="t">${W.map((w,i)=>`<tr class="${i===S.q.swim?'cur':''}"><td class="num">${i+1}</td><td>${esc(w.n)}${i===S.q.swim?'<span class="tag">suggested</span>':''}</td><td class="muted">${w.t}</td><td class="num">${swimDist(w)} m</td></tr>`).join('')}</table></div></details></div>
+   <div class="row"><button class="btn sm" data-act="edit" data-v="swimlist">Manage swims</button></div></div>
+  <details class="panel" id="pl-how"><summary><h2>How it works</h2></summary>
+   <ul class="small">
+    <li><b>Pick any workout</b> on Today. There's no schedule. Alternate Upper body and Lower body, and add a run or swim.</li>
+    <li><b>Log as you go.</b> Tap ✓ on each set and a rest timer starts. Only ticked sets are saved, and only when you tap Finish.</li>
+    <li><b>Progress is automatic.</b> Hit the top of the rep range on every set, and next time the weight goes up, an assisted machine helps less, or a bodyweight move levels up.</li>
+    <li><b>Runs and swims</b> suggest the next session. A Test run updates your speeds; each swim cycle makes send-offs 15 s faster. “Leave every 3:00” means push off every 3 minutes.</li>
+   </ul></details>
+  <details class="panel" id="pl-bk"><summary><h2>Backup and reset</h2></summary>
+   <p class="small muted">Your data lives only on this device. Export a backup now and then, and use it to move to a new phone.</p>
+   <p class="small">Last backup: <b>${lsGet('mp_lastExport')?nice(lsGet('mp_lastExport')):'never'}</b> · ${SESS.length} session${SESS.length===1?'':'s'}</p>
+   <div class="row"><button class="btn sm" data-act="export">Export backup</button><label class="btn sm" for="importFile">Import backup</label>
+   <input id="importFile" type="file" accept="application/json,.json" data-f="import" hidden></div>
+   <p class="small muted">Reset clears weights, levels and where you are in the run and swim plans. History and routines stay.</p>
+   <div>${resetArm?`<button class="btn sm danger" data-act="reset">Tap again to reset</button>`:`<button class="btn sm" data-act="resetarm">Reset plan</button>`}</div></details>`}
 
 /* ---------- sheet ---------- */
 // Phone back button / swipe: keep one extra history entry while off the home screen, and step back one level on popstate.
