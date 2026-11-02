@@ -4,7 +4,7 @@
 
 A phone-first workout planner and tracker. Each time you train, choose **Gym**, **Home**, **Run** or **Swim** and pick the session you want. Logging is quick.
 
-- Your own gym and home routines (create, edit, reorder, delete), preloaded with full body, upper/lower and push/pull/legs templates
+- Your own gym and home routines (create, edit, reorder, delete), preloaded with an Upper body and a Lower body routine
 - Automatic progression: weights go up, bodyweight moves level up, and assisted machines need less assistance
 - Prefilled sets, a rest timer, a plate calculator and exercise swaps; skip anything you don't tick
 - Treadmill runs with speeds worked out from your 5K time, and 50 m pool swims whose send-off times get faster each cycle. Both are editable, and the app suggests the next session.

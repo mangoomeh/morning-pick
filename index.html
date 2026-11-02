@@ -276,23 +276,12 @@ const GYMDAY={UA:['bench','row','db_ohp','pulldown','db_curl'],LA:['squat','rdl'
 // Preset gym routines. Built on what the research supports for beginners: each muscle about twice a week,
 // roughly 10–20 hard sets per muscle per week, big compound lifts first. Users can edit, delete and add their own.
 const PRESET_ROUTINES=[
- {id:'fbA',g:'Full body · 3×/week, alternate A and B',n:'Full body A',ex:['squat','bench','row','rdl','face_pull','plank']},
- {id:'fbB',g:'Full body · 3×/week, alternate A and B',n:'Full body B',ex:['deadlift','ohp','pulldown','split_squat','incline_db','knee_raise']},
- {id:'UA',g:'Upper/Lower · 4×/week',n:'Upper A · Bench focus',day:'UA'},
- {id:'LA',g:'Upper/Lower · 4×/week',n:'Lower A · Squat focus',day:'LA'},
- {id:'UB',g:'Upper/Lower · 4×/week',n:'Upper B · Overhead press focus',day:'UB'},
- {id:'LB',g:'Upper/Lower · 4×/week',n:'Lower B · Deadlift focus',day:'LB'},
- {id:'push',g:'Push/Pull/Legs · 3× or 6×/week',n:'Push',ex:['bench','db_ohp','incline_db','lat_raise','pushdown']},
- {id:'pull',g:'Push/Pull/Legs · 3× or 6×/week',n:'Pull',ex:['row','pulldown','cable_row','face_pull','db_curl']},
- {id:'legs',g:'Push/Pull/Legs · 3× or 6×/week',n:'Legs',ex:['squat','rdl','leg_press','leg_curl','calf']},
+ {id:'UA',g:'Alternate upper and lower',n:'Upper body',day:'UA'},
+ {id:'LA',g:'Alternate upper and lower',n:'Lower body',day:'LA'},
 ];
 const PRESET_HOME=[
- {id:'hfbA',g:'Full body · 3×/week, alternate A and B',n:'Full body A',ex:['push','squat','row','hinge','plank_l']},
- {id:'hfbB',g:'Full body · 3×/week, alternate A and B',n:'Full body B',ex:['pike','lunge','row','sl_rdl','dead_bug']},
- {id:'hUA',g:'Upper/Lower · 4×/week',n:'Upper A',day:'UA'},
- {id:'hLA',g:'Upper/Lower · 4×/week',n:'Lower A',day:'LA'},
- {id:'hUB',g:'Upper/Lower · 4×/week',n:'Upper B',day:'UB'},
- {id:'hLB',g:'Upper/Lower · 4×/week',n:'Lower B',day:'LB'},
+ {id:'hUA',g:'Alternate upper and lower',n:'Upper body',day:'UA'},
+ {id:'hLA',g:'Alternate upper and lower',n:'Lower body',day:'LA'},
 ];
 // Leg exercises (gym and home ids), used for the "trained legs yesterday" warnings.
 const LOWER=new Set(['squat','smith_squat','goblet','rdl','db_rdl','leg_press','calf','deadlift','trap_dl','split_squat','lunge_db','leg_curl','hinge','calf_h','lunge','sl_rdl']);
@@ -624,7 +613,7 @@ function renderPlan(){const p=paces(S.fiveK);
    <p>Miss the top of the range, and you keep the same weight or level and aim for one more rep.</p>
    <h3>Make it yours</h3>
    <ul class="small">
-    <li><b>Gym and Home routines:</b> the presets use well-tested templates (full body, upper/lower and, for the gym, push/pull/legs) that train each muscle about twice a week. Pick one template and stick with it for a few months, or build your own with Manage routines.</li>
+    <li><b>Gym and Home routines:</b> there are two presets, Upper body and Lower body. Alternate them so each muscle gets trained about twice a week, or build your own with Manage routines.</li>
     <li><b>My exercises:</b> add your own gym exercises (barbell, dumbbell, machine, assisted, timed or bodyweight) or home exercises (a ladder of harder variations).</li>
     <li><b>Runs and swims:</b> pick any session. The app suggests the next one so you work through the cycle. Test sessions measure your progress: a new 5K time updates your treadmill speeds, and each swim cycle makes send-offs 15 s faster.</li>
    </ul>
